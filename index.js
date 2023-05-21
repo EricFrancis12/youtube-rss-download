@@ -18,9 +18,7 @@ const utils = require('./utils/utils');
 
 
 
-app.get('/resources/videos/downloads/:folder/:file', (req, res) => {
-    res.send('Hello World');
-});
+
 
 app.get('/resources/videos/downloads/:folder/:file', (req, res) => {
     res.status(200).download(`${DOWNLOADS_}${req.params.folder}/${req.params.file}`);
