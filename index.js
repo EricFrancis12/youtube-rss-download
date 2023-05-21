@@ -44,7 +44,7 @@ function main() {
 
 
 
-    // randomly set up next pass:
+    // randomly set up next pass, so YouTube is less likely to detect pattern:
     const baseTimeout = oneHour;
     const minTimeout = oneHour / 2;
 
@@ -114,7 +114,7 @@ function handleQueue() {
 
 
 
-    // randomly set up call:
+    // randomly set up next call:
     const baseTimeout = 75_000;
     const minTimeout = 45_000;
 
@@ -164,16 +164,6 @@ function handleQueue() {
     }, timeout);
 
 }
-
-
-
-// const queueInterval = 2000;
-// setInterval(checkQueue, queueInterval);
-
-// function checkQueue() {
-//     console.log('current queue length: ' + queue.length);
-//     if (queue.length > 0 && !handlingQueue) handleQueue();
-// }
 
 
 
