@@ -35,7 +35,7 @@ async function sendMessage(message, files, chatID, botToken) {
         );
 
         return response;
-        
+
     } catch (err) {
         console.error(err);
     }
