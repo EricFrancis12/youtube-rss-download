@@ -7,9 +7,9 @@ const brands = [];
 const brandsFolderContents = fs.readdirSync('./brands');
 brandsFolderContents.forEach(item => {
     const stats = fs.statSync(`./brands/${item}`);
-    if (stats.isDirectory && item !== 'brands.js') {
+    if (stats.isDirectory && item !== 'brands.js' && item !== 'brandsJSON.js') {
         //const files = fs.readdirSync(`./brands/${item}`);
-        
+
         try {
             const result = require(`./${item}/${item}.js`);
             brands.push(result);

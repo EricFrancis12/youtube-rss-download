@@ -1,4 +1,5 @@
 module.exports = {
+    name: 'brand-1',
     sources: {
         YT: [
             { channel_id: 'UCwIol-PEI0ISjQvhBdVOgJw', name: 'Joy Land', handle: '@joyland8373', lastKnownV: '' },

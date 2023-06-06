@@ -8,17 +8,26 @@ const ytdl = require('ytdl-core');
 
 const express = require('express');
 const app = express();
+app.set('view engine', 'ejs');
+app.use(express.json());
 
 const xml2js = require('xml2js');
 const parser = new xml2js.Parser();
 
 const brands = require('./brands/brands');
+const brandsJSON = require('./brands/brandsJSON');
 const telegram = require('./telegram/telegram');
 const utils = require('./utils/utils');
 
 
 
+app.get('/', (req, res) => {
+    const brandsData = brandsJSON.getBrandsJSON();
 
+    res.status(200).render('index', {
+        brandsData: brandsData
+    });
+});
 
 app.get('/resources/videos/downloads/:folder/:file', (req, res) => {
     res.status(200).download(`${DOWNLOADS_}${req.params.folder}/${req.params.file}`);
@@ -36,7 +45,7 @@ function main() {
 
         brand.sources.YT.forEach(channel => {
             const rssFeedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.channel_id}`;
-            getnewItems(rssFeedUrl, channel);
+            getnewItems(rssFeedUrl, channel, brand);
         });
     });
 
@@ -60,7 +69,7 @@ const oneHour = 1000 * 60 * 60;
 
 
 
-function getnewItems(rssFeedUrl, channel) {
+function getnewItems(rssFeedUrl, channel, brand) {
     axios.get(rssFeedUrl)
         .then(response => {
             const data = response.data;
@@ -81,7 +90,8 @@ function getnewItems(rssFeedUrl, channel) {
                     url: `https://youtube.com/watch?v=${newestV}`,
                     title: result.feed.entry[0].title[0],
                     channel: channel,
-                    published: result.feed.entry[0].published[0]
+                    published: result.feed.entry[0].published[0],
+                    brand: brand
                 }
 
                 queue.push(queueItem);
@@ -132,10 +142,35 @@ function handleQueue() {
 
                     const item = queue.shift();
 
+                    const timestamp = Date.now();
+                    const timestampFormated = utils.formatDate(timestamp);
+                    const downloadUrl = `${process.env.PROTOCOL__}${process.env.DOMAIN}/resources/videos/downloads/${item.channel.channel_id}/${item.v}.mp4`;
+
+                    const pathTo_brandJSON = `./brands/${item.brand.name}/${item.brand.name}.json`;
+                    const brandJSON = require(pathTo_brandJSON);
+
+                    if (!brandJSON) brandJSON = {};
+                    if (!brandJSON.outputArr) brandJSON.outputArr = [];
+
+                    brandJSON.outputArr.push({
+                        v: item.v,
+                        url: item.url,
+                        title: item.title,
+                        channel: item.channel,
+                        published: item.published,
+                        brand: item.brand,
+                        timestamp: timestamp,
+                        timestampFormated: timestampFormated,
+                        outputPath: outputPath,
+                        downloadUrl: downloadUrl
+                    });
+
+                    fs.writeFileSync(pathTo_brandJSON, JSON.stringify(brandJSON));
+
                     telegram.sendMessage(`
                         New video from ${item.channel.name}
                         \n
-                        Download: ${process.env.PROTOCOL__}${process.env.DOMAIN}/resources/videos/downloads/${item.channel.channel_id}/${item.v}.mp4
+                        Download: ${downloadUrl}
                         \n
                         Title: ${item.title}
                         \n
