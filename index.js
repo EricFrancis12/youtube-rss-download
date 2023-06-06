@@ -21,6 +21,8 @@ const utils = require('./utils/utils');
 
 
 
+
+
 app.get('/', (req, res) => {
     const brandsData = brandsJSON.getBrandsJSON();
 
@@ -29,8 +31,54 @@ app.get('/', (req, res) => {
     });
 });
 
+
+
 app.get('/resources/videos/downloads/:folder/:file', (req, res) => {
-    res.status(200).download(`${DOWNLOADS_}${req.params.folder}/${req.params.file}`);
+    try {
+        const filePath = `${DOWNLOADS_}${req.params.folder}/${req.params.file}`
+        res.status(200).download(filePath);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            errorMessage: err
+        });
+    }
+});
+
+
+
+app.delete('/resources/videos/downloads/:folder/:file', (req, res) => {
+    console.log('new delete req body follows:');
+    console.log(req.body);
+
+    try {
+        const filePath = `${DOWNLOADS_}${req.params.folder}/${req.params.file}`;
+        const pathTo_brandJSON = `./brands/${req.body.brandName}/${req.body.brandName}.json`;
+        const brandJSON = require(pathTo_brandJSON);
+
+        brandJSON.outputArr.forEach((item, index) => {
+            if (item.serverUrl === `${process.env.PROTOCOL__}${process.env.DOMAIN}/resources/videos/downloads/${req.params.folder}/${req.params.file}`) {
+                console.log('delete requirements met');
+                brandJSON.outputArr.splice(index, 1);
+            }
+        });
+
+        fs.unlinkSync(filePath);
+        fs.rmdirSync(`${DOWNLOADS_}${req.params.folder}`);
+
+        fs.writeFileSync(pathTo_brandJSON, JSON.stringify(brandJSON));
+
+        res.status(202).json({
+            success: true
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            errorMessage: err
+        });
+    }
 });
 
 
@@ -144,7 +192,7 @@ function handleQueue() {
 
                     const timestamp = Date.now();
                     const timestampFormated = utils.formatDate(timestamp);
-                    const downloadUrl = `${process.env.PROTOCOL__}${process.env.DOMAIN}/resources/videos/downloads/${item.channel.channel_id}/${item.v}.mp4`;
+                    const serverUrl = `${process.env.PROTOCOL__}${process.env.DOMAIN}/resources/videos/downloads/${item.channel.channel_id}/${item.v}.mp4`;
 
                     const pathTo_brandJSON = `./brands/${item.brand.name}/${item.brand.name}.json`;
                     const brandJSON = require(pathTo_brandJSON);
@@ -162,7 +210,7 @@ function handleQueue() {
                         timestamp: timestamp,
                         timestampFormated: timestampFormated,
                         outputPath: outputPath,
-                        downloadUrl: downloadUrl
+                        serverUrl: serverUrl
                     });
 
                     fs.writeFileSync(pathTo_brandJSON, JSON.stringify(brandJSON));
@@ -170,7 +218,7 @@ function handleQueue() {
                     telegram.sendMessage(`
                         New video from ${item.channel.name}
                         \n
-                        Download: ${downloadUrl}
+                        Download: ${serverUrl}
                         \n
                         Title: ${item.title}
                         \n

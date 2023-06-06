@@ -6,15 +6,179 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
+
+    <style>
+        .hide,
+        *.hide {
+            height: 0;
+            min-height: 0;
+            max-height: 0;
+        }
+
+        table {
+            text-align: center;
+        }
+
+        table,
+        tr,
+        th,
+        td {
+            border: solid black 1px;
+            pointer-events: none;
+        }
+
+        a,
+        span {
+            pointer-events: all;
+        }
+
+        span {
+            color: blue;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        #main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 90vw;
+        }
+
+        .menu-item {
+            width: 100%;
+        }
+
+        .menu-item-top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 50px;
+            background-color: grey;
+        }
+
+        .menu-header {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .dropdown {
+            top: 100%;
+            width: 100%;
+            height: 0;
+            min-height: none;
+            background-color: lightgrey;
+            overflow: hidden;
+        }
+
+        .dropdown.active {
+            height: auto;
+            min-height: 75px;
+        }
+
+        .dropdown-item {
+            width: 100%;
+        }
+    </style>
 </head>
 
 <body>
+    <div id="main"></div>
+
+    <% for (let i=0; i < locals.brandsData.length; i++) { %>
+
+        <div class="menu-item">
+            <div class="menu-item-top">
+                <div class="menu-header">
+                    <button onclick="toggleDropdown(event)">
+                        <%= locals.brandsData[i].name || `` %>
+                    </button>
+                </div>
+            </div>
+            <div class="dropdown">
+                <table>
+                    <tr>
+                        <th>Published</th>
+                        <th>Title</th>
+                        <th>Channel</th>
+                        <th>Video</th>
+                        <th>Download</th>
+                        <th>Delete</th>
+                    </tr>
+
+                    <% for (let j=0; j < locals.brandsData[i].outputArr.length; j++) { %>
+
+                        <tr>
+                            <td>
+                                <%= locals.brandsData[i].outputArr[j].published || `` %>
+                            </td>
+                            <td>
+                                <%= locals.brandsData[i].outputArr[j].title || `` %>
+                            </td>
+                            <td>
+                                <%= locals.brandsData[i].outputArr[j].channel.name || `` %>
+                            </td>
+                            <td><a target="_blank"
+                                    href="https://youtube.com/watch?v=<%= locals.brandsData[i].outputArr[j].v || `` %>">Link</a>
+                            </td>
+                            <td><a href="<%= locals.brandsData[i].outputArr[j].serverUrl || `` %>">Link</a></td>
+                            <td><span
+                                    onclick="deleteVideo(event, '<%= locals.brandsData[i].outputArr[j].serverUrl || `` %>', '<%= locals.brandsData[i].name || `` %>')">Delete</span>
+                            </td>
+                        </tr>
+
+                        <% } %>
+
+                </table>
+            </div>
+        </div>
+
+        <% } %>
+
+            </div>
+
+            <script>
+
+                function toggleDropdown(event) {
+                    const dropdown = event.target.parentNode.parentNode.nextElementSibling;
+                    dropdown.classList.toggle('active');
+                }
 
 
 
-    <script>
-        console.log('<%= JSON.stringify(locals.brandsData) %>');
-    </script>
+                async function deleteVideo(event, url, brandName) {
+                    console.log(event);
+                    console.log(event.target);
+                    try {
+                        const res = await fetch(url, {
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            method: 'DELETE',
+                            body: JSON.stringify({
+                                brandName: brandName
+                            })
+                        });
+
+                        const resJSON = await res.json();
+
+                        if (resJSON.success === true) {
+                            const row = event.target.parentNode.parentNode;
+                            row.remove();
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+
+            </script>
 
 </body>
 
